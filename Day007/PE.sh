@@ -1,0 +1,21 @@
+#!/bin/bash
+num_executors=12
+executor_memory=4G
+executor_cores=4
+driver_memory=2G
+
+pe_version=1.1
+
+kafka_topics="predictor_address_constant_registration_date_from_gold,predictor_address_constant_registration_gold,predictor_address_employer_date_from_gold,predictor_address_employer_gold,predictor_address_fact_residental_date_from_gold,predictor_address_fact_residental_value_gold,predictor_agreement_number_days_before_expiration_validity_period,predictor_agreement_ratio_current_begin_amount_owed,predictor_agreement_term_before_payment,predictor_birth_date_gold,predictor_birth_place_gold,predictor_cuid_gold,predictor_current_family_children_number_gold,predictor_current_family_status_gold,predictor_employment_name_gold,predictor_employment_occupation_gold,predictor_employment_start_date_work_current_gold,predictor_employment_type_gold,predictor_full_name_firstname_gold,predictor_full_name_lastname_gold,predictor_full_name_secondname_gold,predictor_income_joint_gold,predictor_income_offline_family_predicted,predictor_income_offline_predicted,predictor_inn_tax_gold,predictor_main_phone_number_gold,predictor_passport_ru_code_issuer_gold,predictor_passport_ru_issued_gold,predictor_passport_ru_issuer_gold,predictor_passport_ru_number_gold,predictor_passport_ru_series_gold,predictor_personal_age_customer_gold,predictor_personal_gender_gold,predictor_pfr_account_advice,predictor_product_type_number_active_contract,predictor_sas_rtdm_offer,predictor_snils_number_gold,predictor_status_model_client_relationship_implicit_gold,predictor_address_geocode_location"
+
+spark-submit --master yarn --deploy-mode cluster --name "PredictorEngine (non-idents)" --files /etc/hbase/conf/hbase-site.xml \
+--conf spark.streaming.backpressure.enabled=true \
+--conf spark.streaming.kafka.maxRatePerPartition=100 \
+--conf spark.streaming.backpressure.pid.minRate=1 \
+--conf spark.yarn.submit.waitAppCompletion=false \
+--num-executors $num_executors --executor-memory $executor_memory --executor-cores $executor_cores --driver-memory $driver_memory \
+--class ru.croc.smartdata.spark.PredictorEngineApp predictor-engine-$pe_version-jar-with-dependencies.jar --port 9850 --broker {kafka} --script-path hdfs://{s-path}/smartdata/predictor_engine_scripts \
+--topics $kafka_topics \
+--offsetSplit 250 \
+--offsetDistinct 1000 \
+--interval 60000
