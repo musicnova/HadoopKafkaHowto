@@ -1,0 +1,30 @@
+package ru.croc.smartdata.spark;
+
+import kafka.serializer.Decoder;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
+/**
+ *
+ */
+public class ObjectDecoder implements Decoder<Object> {
+    private final static org.apache.log4j.Logger log = org.apache.log4j.LogManager.getLogger(ObjectDecoder.class);
+
+    public ObjectDecoder(kafka.utils.VerifiableProperties props) {
+    }
+
+    @Override
+    public Object fromBytes(byte[] bytes) {
+        try {
+            try {
+                return (new ObjectInputStream(new ByteArrayInputStream(bytes))).readObject();
+            } catch(ObjectStreamException e) {
+                return (new String(bytes, StandardCharsets.UTF_8));
+            }
+        } catch(Exception ex) {
+            log.error("Error trying to decode Object from Kafka", ex);
+        }
+        return null;
+    }
+}
